@@ -6,6 +6,7 @@ use Craft;
 use craft\web\Controller;
 use craft\elements\User;
 use craft\helpers\UrlHelper;
+use modules\agencyauth\AgencyAuth;
 
 use GuzzleHttp;
 
@@ -17,15 +18,12 @@ class CallbackController extends Controller
     public function actionIndex()
     {
         $config = Craft::$app->config->getConfigFromFile('agency-auth');
+        $callbackUrl = AgencyAuth::getCallbackUrl();
 
         $query = Craft::$app->request->getQueryParams();
         $code = $query['code'];
 
         $client = new GuzzleHttp\Client();
-
-        $currentSite = Craft::$app->getSites()->currentSite;
-
-        $callbackUrl = $currentSite->getBaseUrl() . 'actions/agency-auth/callback';
 
         // see: https://developers.google.com/identity/protocols/oauth2/web-server#httprest
 
@@ -99,7 +97,7 @@ class CallbackController extends Controller
                 Craft::$app->elements->saveElement($newUser, false);
                 Craft::$app->getUsers()->activateUser($newUser);
             } catch (\Throwable $th) {
-                //throw $th;
+                throw $th;
             }
 
             $user = $newUser;

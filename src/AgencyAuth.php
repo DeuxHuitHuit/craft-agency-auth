@@ -28,6 +28,14 @@ class AgencyAuth extends Module
         parent::__construct($id, $parent, $config);
     }
 
+    public static function getCallbackUrl()
+    {
+        $primarySite = Craft::$app->getSites()->primarySite;
+        $atWeb = Craft::getAlias('@web');
+
+        return ($atWeb ? "$atWeb/" : $currentSite->getBaseUrl()) . 'actions/agency-auth/callback';
+    }
+
     public function init()
     {
         parent::init();
