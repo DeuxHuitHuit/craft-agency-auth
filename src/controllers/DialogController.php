@@ -10,7 +10,7 @@ use modules\agencyauth\AgencyAuth;
 class DialogController extends Controller
 {
 
-    protected $allowAnonymous = ['index'];
+    protected array|bool|int $allowAnonymous = ['index'];
 
     public function actionIndex()
     {

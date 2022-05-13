@@ -13,7 +13,7 @@ use GuzzleHttp;
 class CallbackController extends Controller
 {
 
-    protected $allowAnonymous = ['index'];
+    protected array|bool|int $allowAnonymous = ['index'];
 
     public function actionIndex()
     {
