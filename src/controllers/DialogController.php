@@ -19,7 +19,7 @@ class DialogController extends Controller
 
         $base = 'https://accounts.google.com/o/oauth2/auth';
         $query = [
-            'scope='. urlencode('https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email'),
+            'scope='. urlencode('email'),
             'redirect_uri='. urlencode($callbackUrl),
             'response_type=code',
             'client_id=' . $config['client_id'],
