@@ -18,8 +18,9 @@ class DialogController extends Controller
         $callbackUrl = AgencyAuth::getCallbackUrl();
 
         $base = 'https://accounts.google.com/o/oauth2/auth';
+        // We need profile to get the user's name on first login
         $query = [
-            'scope='. urlencode('email'),
+            'scope='. urlencode('email profile openid'),
             'redirect_uri='. urlencode($callbackUrl),
             'response_type=code',
             'client_id=' . $config['client_id'],
