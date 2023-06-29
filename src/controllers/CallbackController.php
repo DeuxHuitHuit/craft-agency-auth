@@ -46,7 +46,7 @@ class CallbackController extends Controller
         ]);
 
         if ($r->getStatusCode() !== 200) {
-            return 'false';
+            return $this->redirect(UrlHelper::cpUrl() . '?error=1');
         }
 
         $r = json_decode($r->getBody(), true);
@@ -66,7 +66,7 @@ class CallbackController extends Controller
         ]);
 
         if ($r->getStatusCode() !== 200) {
-            return false;
+            return $this->redirect(UrlHelper::cpUrl() . '?error=2');
         }
 
         $providerData = json_decode($r->getBody(), true);
