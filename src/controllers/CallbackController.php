@@ -26,7 +26,6 @@ class CallbackController extends Controller
         $client = new GuzzleHttp\Client();
 
         // see: https://developers.google.com/identity/protocols/oauth2/web-server#httprest
-
         // 1. Get access token from Google with ?code= qs param
 
         $url = 'https://oauth2.googleapis.com/token';
@@ -52,8 +51,6 @@ class CallbackController extends Controller
         $r = json_decode($r->getBody(), true);
 
 
-
-
         // 2. With the access token, get the user info from Google
 
         $url = 'https://www.googleapis.com/oauth2/v2/userinfo?fields=name,given_name,family_name,email,locale,picture,verified_email';
@@ -70,8 +67,6 @@ class CallbackController extends Controller
         }
 
         $providerData = json_decode($r->getBody(), true);
-
-
 
 
         // 3. With the Google's user info, find or create a user in Craft
@@ -110,14 +105,29 @@ class CallbackController extends Controller
 
             // Even though the Google Workspace account is valid and active we can always suspend
             // the craft account if need be.
-            if (!!$user->suspended) {
-                return $this->asErrorJson('Your account is suspended.');
+            if ($user->suspended) {
+                throw new \Exception('Your account is suspended.');
             }
 
+            // Login the user
             Craft::$app->getUser()->login($user);
 
-            // redirect to the dashboard
-            return $this->redirect(UrlHelper::cpUrl());
+            // Validate access to cp
+            if (!Craft::$app->getUser()->checkPermission('accessCp')) {
+                Craft::$app->getUser()->logout();
+                throw new \Exception('You do not have access to the control panel.');
+            }
+
+            // Get return url
+            $returnUrl = Craft::$app->getUser()->getReturnUrl();
+            if ($returnUrl) {
+                return $this->redirect($returnUrl);
+            }
+
+            // redirect to the default post login cp url
+            return $this->redirect(UrlHelper::cpUrl(
+                Craft::$app->getConfig()->getGeneral()->getPostCpLoginRedirect()
+            ));
         }
     }
 }
