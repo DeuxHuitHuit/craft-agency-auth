@@ -1,7 +1,9 @@
 # Agency Auth
 
+> This plugin allows us to log with our Google Account.
+
 ## Create and save the credentials
-1. [Create OAuth client ID here](https://console.cloud.google.com/apis/credentials/oauthclient?project=deux-huit-huit-craft-login)
+1. [Create OAuth client ID here](https://console.cloud.google.com/apis/credentials/oauthclient)
 2. Application type to Web application
 3. Name the credentials with the client's project name
 4. Add the authorized redirect URIs according to your setup. e.g. `https://example.com/actions/agency-auth/callback` no language are required.

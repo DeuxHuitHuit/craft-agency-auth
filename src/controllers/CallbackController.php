@@ -6,6 +6,7 @@ use Craft;
 use craft\web\Controller;
 use craft\elements\User;
 use craft\helpers\UrlHelper;
+use Exception;
 use modules\agencyauth\AgencyAuth;
 
 use GuzzleHttp;
@@ -86,7 +87,11 @@ class CallbackController extends Controller
             $newUser->admin  = true;
 
             // set the password to a generic, unusable password from an anonymous user
-            $newUser->newPassword = 'Deuxhuithuit!';
+            $newUser->newPassword = Craft::$app->getConfig()->getEnv('AGENCY_AUTH_DEFAULT_PASSWORD');
+        
+            if ($newUser->newPassword) {
+                throw new Exception('AGENCY_AUTH_DEFAULT_PASSWORD is not set in .env');
+            }
 
             try {
                 Craft::$app->elements->saveElement($newUser, false);
