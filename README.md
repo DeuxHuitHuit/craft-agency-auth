@@ -1,6 +1,10 @@
 # Agency Auth
 
-> This plugin allows us to log with our Google Account.
+> This plugin allows us to log in the control panel with our Google Account.
+
+> [!NOTE]
+> This is meant to be internally used by Deux Huit Huit and might not do what you want.
+> Pull Requests are welcome :)
 
 ## Create and save the credentials
 1. [Create OAuth client ID here](https://console.cloud.google.com/apis/credentials/oauthclient)

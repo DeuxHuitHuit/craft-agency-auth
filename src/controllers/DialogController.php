@@ -1,11 +1,11 @@
 <?php
 
-namespace modules\agencyauth\controllers;
+namespace deuxhuithuit\agencyauth\controllers;
 
 use Craft;
 use craft\web\Controller;
 use craft\elements\User;
-use modules\agencyauth\AgencyAuth;
+use deuxhuithuit\agencyauth\AgencyAuth;
 
 class DialogController extends Controller
 {
