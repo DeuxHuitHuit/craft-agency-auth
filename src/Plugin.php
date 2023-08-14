@@ -19,6 +19,8 @@ use yii\base\Event;
 
 class Plugin extends \craft\base\Plugin
 {
+    public static $instance;
+
     public function __construct($id, $parent = null, array $config = [])
     {
         // Set this as the global instance of this module class
