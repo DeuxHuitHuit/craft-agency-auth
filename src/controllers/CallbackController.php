@@ -6,7 +6,7 @@ use Craft;
 use craft\web\Controller;
 use craft\elements\User;
 use craft\helpers\UrlHelper;
-use Exception;
+
 use deuxhuithuit\agencyauth\Plugin;
 
 use GuzzleHttp;
@@ -20,6 +20,14 @@ class CallbackController extends Controller
     {
         $config = Craft::$app->config->getConfigFromFile('agency-auth');
         $callbackUrl = Plugin::getCallbackUrl();
+
+        if (empty($config['client_id'])) {
+            throw new \Exception('client_id is not set in config.');
+        } elseif (empty($config['client_secret'])) {
+            throw new \Exception('client_secret is not set in config.');
+        } elseif (empty($config['domain'])) {
+            throw new \Exception('domain is not set in config.');
+        }
 
         $query = Craft::$app->request->getQueryParams();
         $code = $query['code'];
@@ -90,7 +98,7 @@ class CallbackController extends Controller
             $newUser->newPassword = $config['default_password'] ?? '';
         
             if ($newUser->newPassword) {
-                throw new Exception('default_password is not set config.');
+                throw new \Exception('default_password is not set config.');
             }
 
             try {
