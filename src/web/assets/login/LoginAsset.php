@@ -1,6 +1,6 @@
 <?php
 
-namespace modules\agencyauth\web\assets\login;
+namespace deuxhuithuit\agencyauth\web\assets\login;
 
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;

@@ -1,7 +1,13 @@
 # Agency Auth
 
+> This plugin allows us to log in the control panel with our Google Account.
+
+> [!NOTE]
+> This is meant to be internally used by Deux Huit Huit and might not do what you want.
+> Pull Requests are welcome :)
+
 ## Create and save the credentials
-1. [Create OAuth client ID here](https://console.cloud.google.com/apis/credentials/oauthclient?project=deux-huit-huit-craft-login)
+1. [Create OAuth client ID here](https://console.cloud.google.com/apis/credentials/oauthclient)
 2. Application type to Web application
 3. Name the credentials with the client's project name
 4. Add the authorized redirect URIs according to your setup. e.g. `https://example.com/actions/agency-auth/callback` no language are required.

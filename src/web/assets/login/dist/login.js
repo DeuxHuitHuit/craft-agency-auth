@@ -9,7 +9,8 @@
 
 	const init = () => {
 		const ref = scope.find(sels.ref);
-		const html = $('<a href="/actions/agency-auth/dialog" class="btn dhh-btn" />').text('Login with Deux Huit Huit');
+		const html = $('<a href="/actions/agency-auth/dialog" class="btn dhh-btn" />')
+			.text('Agency Login');
 
 		html.insertBefore(ref);
 	};
