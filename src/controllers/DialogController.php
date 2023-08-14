@@ -5,7 +5,7 @@ namespace deuxhuithuit\agencyauth\controllers;
 use Craft;
 use craft\web\Controller;
 use craft\elements\User;
-use deuxhuithuit\agencyauth\AgencyAuth;
+use deuxhuithuit\agencyauth\Plugin;
 
 class DialogController extends Controller
 {
@@ -15,7 +15,7 @@ class DialogController extends Controller
     public function actionIndex()
     {
         $config = Craft::$app->config->getConfigFromFile('agency-auth');
-        $callbackUrl = AgencyAuth::getCallbackUrl();
+        $callbackUrl = Plugin::getCallbackUrl();
 
         $base = 'https://accounts.google.com/o/oauth2/auth';
         // We need profile to get the user's name on first login

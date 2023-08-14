@@ -7,7 +7,7 @@ use craft\web\Controller;
 use craft\elements\User;
 use craft\helpers\UrlHelper;
 use Exception;
-use deuxhuithuit\agencyauth\AgencyAuth;
+use deuxhuithuit\agencyauth\Plugin;
 
 use GuzzleHttp;
 
@@ -19,7 +19,7 @@ class CallbackController extends Controller
     public function actionIndex()
     {
         $config = Craft::$app->config->getConfigFromFile('agency-auth');
-        $callbackUrl = AgencyAuth::getCallbackUrl();
+        $callbackUrl = Plugin::getCallbackUrl();
 
         $query = Craft::$app->request->getQueryParams();
         $code = $query['code'];
