@@ -94,7 +94,7 @@ class CallbackController extends Controller
             // set the password to a generic, unusable password from an anonymous user
             $newUser->newPassword = $config['default_password'] ?? '';
 
-            if ($newUser->newPassword) {
+            if (!$newUser->newPassword) {
                 throw new \Exception('default_password is not set config.');
             }
 
