@@ -4,6 +4,7 @@ namespace deuxhuithuit\agencyauth\controllers;
 
 use Craft;
 use craft\elements\User;
+use craft\elements\Asset;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
 use deuxhuithuit\agencyauth\Plugin;
@@ -13,9 +14,46 @@ class CallbackController extends Controller
 {
     protected array|bool|int $allowAnonymous = ['index'];
 
+    private function findOrCreatePhotoAsset($url, $email)
+    {
+        if (!$url) {
+            return null;
+        }
+        $assetName = $email . '.jpg';
+        $existing = Asset::find()
+            ->filename($assetName)
+            ->one();
+        if ($existing) {
+            return $existing;
+        }
+        $client = new GuzzleHttp\Client();
+        $tempLocation = Craft::$app->path->getTempAssetUploadsPath() . '/' . $assetName;
+        $r = $client->get($url, ['sink' => $tempLocation]);
+        if ($r->getStatusCode() !== 200) {
+            return null;
+        }
+
+        $volume = Craft::$app->getVolumes()->getVolumeByHandle('assets');
+        if (!$volume) {
+            return null;
+        }
+        $folder = Craft::$app->assets->getRootFolderBySourceId($volume);
+        if (!$folder) {
+            return null;
+        }
+
+        $asset = new Asset();
+        $asset->tempFilePath = $tempLocation;
+        $asset->filename = $assetName;
+        $asset->folderId = $folder->id;
+        $asset->setScenario(Asset::SCENARIO_CREATE);
+        Craft::$app->getElements()->saveElement($asset);
+        return $asset;
+    }
+
     public function actionIndex()
     {
-        $config = \Craft::$app->config->getConfigFromFile('agency-auth');
+        $config = Craft::$app->config->getConfigFromFile('agency-auth');
         $callbackUrl = Plugin::getCallbackUrl();
 
         if (empty($config['client_id'])) {
@@ -28,7 +66,7 @@ class CallbackController extends Controller
             throw new \Exception('domain is not set in config.');
         }
 
-        $query = \Craft::$app->request->getQueryParams();
+        $query = Craft::$app->request->getQueryParams();
         $code = $query['code'];
 
         $client = new GuzzleHttp\Client();
@@ -53,14 +91,22 @@ class CallbackController extends Controller
         ]);
 
         if ($r->getStatusCode() !== 200) {
-            return $this->redirect(UrlHelper::cpUrl() . '?error=1');
+            return $this->redirect(UrlHelper::cpUrl('login') . '?error=1');
         }
 
         $r = json_decode($r->getBody(), true);
 
         // 2. With the access token, get the user info from Google
 
-        $url = 'https://www.googleapis.com/oauth2/v2/userinfo?fields=name,given_name,family_name,email,locale,picture,verified_email';
+        $url = 'https://www.googleapis.com/oauth2/v2/userinfo?fields=' . implode(',', [
+            'name',
+            'given_name',
+            'family_name',
+            'email',
+            'locale',
+            'picture',
+            'verified_email'
+        ]);
 
         $r = $client->request('GET', $url, [
             'headers' => [
@@ -70,74 +116,75 @@ class CallbackController extends Controller
         ]);
 
         if ($r->getStatusCode() !== 200) {
-            return $this->redirect(UrlHelper::cpUrl() . '?error=2');
+            return $this->redirect(UrlHelper::cpUrl('login') . '?error=2');
         }
 
         $providerData = json_decode($r->getBody(), true);
 
-        // 3. With the Google's user info, find or create a user in Craft
+        // make sure if someone is logged in, they are logged out with this
+        Craft::$app->getUser()->logout();
 
-        $user = \Craft::$app->users->getUserByUsernameOrEmail($providerData['email']);
+        // 3. With the Google's user info, find or create a user in Craft
+        $user = Craft::$app->users->getUserByUsernameOrEmail($providerData['email']);
 
         // if no one was found, create a new admin user
-        if (empty($user)) {
-            $newUser = new User();
-            $newUser->username = $providerData['email'];
-            $newUser->email = $providerData['email'];
-            $newUser->firstName = $providerData['given_name'];
-            $newUser->lastName = $providerData['family_name'];
-            $newUser->suspended = false;
-            $newUser->pending = false;
-            $newUser->unverifiedEmail = null;
-            $newUser->admin = true;
-
-            // set the password to a generic, unusable password from an anonymous user
-            $newUser->newPassword = $config['default_password'] ?? '';
-
-            if (!$newUser->newPassword) {
-                throw new \Exception('default_password is not set config.');
-            }
-
-            try {
-                \Craft::$app->elements->saveElement($newUser, false);
-                \Craft::$app->getUsers()->activateUser($newUser);
-            } catch (\Throwable $th) {
-                throw $th;
-            }
-
-            $user = $newUser;
-        }
-
-        // make sure if someone is logged in, they are logged out with this
-        \Craft::$app->getUser()->logout();
-
-        if (!empty($user)) {
+        $isNewUser = empty($user);
+        if ($isNewUser) {
+            $user = new User();
+            $user->suspended = false;
+            $user->pending = false;
+            $user->unverifiedEmail = null;
+        } else {
             // Even though the Google Workspace account is valid and active we can always suspend
             // the craft account if need be.
             if ($user->suspended) {
                 throw new \Exception('Your account is suspended.');
             }
-
-            // Login the user
-            \Craft::$app->getUser()->login($user);
-
-            // Validate access to cp
-            if (!\Craft::$app->getUser()->checkPermission('accessCp')) {
-                \Craft::$app->getUser()->logout();
-
-                throw new \Exception('You do not have access to the control panel.');
-            }
-
-            // Get return url
-            $returnUrl = \Craft::$app->getUser()->getReturnUrl();
-            if ($returnUrl) {
-                return $this->redirect($returnUrl);
-            }
-
-            // redirect to the default post login cp url
-            return $this->redirect(UrlHelper::cpUrl(
-                \Craft::$app->getConfig()->getGeneral()->getPostCpLoginRedirect()
-            ));
         }
+
+        // Update the user with the Google Workspace data
+        $user->username = $providerData['email'];
+        $user->email = $providerData['email'];
+        $user->firstName = $providerData['given_name'];
+        $user->lastName = $providerData['family_name'];
+        // $user->photo = $this->findOrCreatePhotoAsset(
+        //     $providerData['picture'],
+        //     $providerData['email'] 
+        // ) ?? $user->photo;
+        $user->admin = true;
+        // set the password to a generic, unusable password from an anonymous user
+        $user->newPassword = $config['default_password'] ?? '';
+
+        // Make sure password is set
+        if (!$user->newPassword) {
+            throw new \Exception('default_password is not set config.');
+        }
+
+        // Save the user
+        Craft::$app->elements->saveElement($user, false);
+        if ($isNewUser) {
+            Craft::$app->getUsers()->activateUser($user);
+        }
+
+        // Login the user
+        Craft::$app->getUser()->login($user);
+
+        // Validate access to cp
+        if (!Craft::$app->getUser()->checkPermission('accessCp')) {
+            throw new \Exception('You do not have access to the control panel.');
+        }
+
+        // Get return url
+        $returnUrl = Craft::$app->getUser()->getReturnUrl();
+        $cpUrl = current(explode('?', UrlHelper::cpUrl()));
+        // Redirect to the return url if it's a cp url
+        if ($returnUrl && strpos($returnUrl, $cpUrl) === 0) {
+            return $this->redirect($returnUrl);
+        }
+
+        // redirect to the default post login cp url
+        return $this->redirect(UrlHelper::cpUrl(
+            Craft::$app->getConfig()->getGeneral()->getPostCpLoginRedirect()
+        ));
     }
 }
