@@ -5,6 +5,7 @@ namespace deuxhuithuit\agencyauth\controllers;
 use Craft;
 use craft\elements\User;
 use craft\elements\Asset;
+use craft\records\VolumeFolder;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
 use deuxhuithuit\agencyauth\Plugin;
@@ -14,18 +15,22 @@ class CallbackController extends Controller
 {
     protected array|bool|int $allowAnonymous = ['index'];
 
-    private function findOrCreatePhotoAsset($url, $email)
+    private function findOrCreatePhotoAsset($url, $email, $volumeHandle, $folderName)
     {
         if (!$url) {
             return null;
         }
-        $assetName = $email . '.jpg';
+
+        // Check if asset already exists
+        $assetName = \md5($url) . '.jpg';
         $existing = Asset::find()
             ->filename($assetName)
             ->one();
         if ($existing) {
             return $existing;
         }
+
+        // Download asset
         $client = new GuzzleHttp\Client();
         $tempLocation = Craft::$app->path->getTempAssetUploadsPath() . '/' . $assetName;
         $r = $client->get($url, ['sink' => $tempLocation]);
@@ -33,21 +38,43 @@ class CallbackController extends Controller
             return null;
         }
 
-        $volume = Craft::$app->getVolumes()->getVolumeByHandle('assets');
+        // Find volume
+        $volume = Craft::$app->getVolumes()->getVolumeByHandle($volumeHandle);
         if (!$volume) {
-            return null;
-        }
-        $folder = Craft::$app->assets->getRootFolderBySourceId($volume);
-        if (!$folder) {
-            return null;
+            throw new \Exception("Volume $volumeHandle not found.");
         }
 
+        // Find or create folder
+        $folder = VolumeFolder::find()
+            ->where(['volumeId' => $volume->id, 'name' => $folderName])
+            ->one();
+        if (!$folder) {
+            $folder = new VolumeFolder([
+                'volumeId' => $volume->id,
+                'parentId' => null, // The ID of the parent folder, null to hide it
+                'name' => $folderName, // The name of the folder
+                'path' => "$folderName/", // The path of the folder
+            ]);
+
+            $folder->save();
+
+            if ($folder->hasErrors()) {
+                throw new \Exception('Error creating folder: ' . implode(', ', $folder->getFirstErrors()));
+            }
+        }
+
+        // Create asset
         $asset = new Asset();
+        $asset->title = $email;
         $asset->tempFilePath = $tempLocation;
         $asset->filename = $assetName;
-        $asset->folderId = $folder->id;
+        $asset->newFolderId = $folder->id;
+        $asset->volumeId = $volume->id;
         $asset->setScenario(Asset::SCENARIO_CREATE);
         Craft::$app->getElements()->saveElement($asset);
+        if ($asset->hasErrors()) {
+            throw new \Exception('Error creating asset: ' . implode(', ', $asset->getFirstErrors()));
+        }
         return $asset;
     }
 
@@ -147,10 +174,14 @@ class CallbackController extends Controller
         $user->email = $providerData['email'];
         $user->firstName = $providerData['given_name'];
         $user->lastName = $providerData['family_name'];
-        // $user->photo = $this->findOrCreatePhotoAsset(
-        //     $providerData['picture'],
-        //     $providerData['email'] 
-        // ) ?? $user->photo;
+        if (isset($config['photo_volume_handle']) && isset($config['photo_folder_name'])) {
+            $user->photo = $this->findOrCreatePhotoAsset(
+                $providerData['picture'],
+                $providerData['email'],
+                $config['photo_volume_handle'],
+                $config['photo_folder_name']
+            ) ?? $user->photo;
+        }
         $user->admin = true;
         // set the password to a generic, unusable password from an anonymous user
         $user->newPassword = $config['default_password'] ?? '';
@@ -176,6 +207,7 @@ class CallbackController extends Controller
 
         // Get return url
         $returnUrl = Craft::$app->getUser()->getReturnUrl();
+        // Get cp root url
         $cpUrl = current(explode('?', UrlHelper::cpUrl()));
         // Redirect to the return url if it's a cp url
         if ($returnUrl && strpos($returnUrl, $cpUrl) === 0) {

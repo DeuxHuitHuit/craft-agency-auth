@@ -15,6 +15,25 @@
 6. Fill the credentials in the `/config/agency-auth.php` file
 7. Commit the changes
 
+## config/agency-auth.php
+
+The possible settings are:
+
+```php
+<?php
+
+return [
+    '*' => [
+        'client_id' => '',
+        'client_secret' => '',
+        'domain' => '',
+        'default_password' => '',
+        'photo_volume_handle' => '', // optional
+        'photo_folder_name' => '', // optional
+    ]
+];
+```
+
 ## src/AgencyAuth.php
 This file will prevent the manual login with a password into craft's CP. It will also add js and css into the login page for the oauth2 dialog button.
 
