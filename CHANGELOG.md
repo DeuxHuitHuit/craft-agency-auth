@@ -1,5 +1,9 @@
 # Change log
 
+## 1.1.1 - 2024-01-18
+
+* 1e0b275dc9 (feat) Add plugin icon
+
 ## 1.1.0 - 2023-09-28
 * 569174c626 (feat) Add photo of users
 * ed39f84ac1 (feat) Update craft update on each login
