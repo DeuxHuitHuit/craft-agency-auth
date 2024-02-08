@@ -1,5 +1,9 @@
 # Change log
 
+## 1.1.2 - 2024-02-08
+
+* 723c9a117b (chore) Add php 8.3 support
+
 ## 1.1.1 - 2024-01-18
 
 * 1e0b275dc9 (feat) Add plugin icon
