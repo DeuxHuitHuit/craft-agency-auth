@@ -1,15 +1,13 @@
 (() => {
 	'use strict';
 
-	const init = () => {
-		const container = document.querySelector('.login-form-container');
-		const button = document.createElement('a');
-		button.href = '/actions/agency-auth/dialog';
-		button.className = 'btn dhh-btn';
-		button.textContent = 'Agency Login';
-
-		container.appendChild(button);
-	};
-
-	init();
+	const formContainer = document.querySelector('.login-form-container');
+	if (!formContainer) {
+		return;
+	}
+	const link = document.createElement('a');
+	link.href = '/actions/agency-auth/dialog';
+	link.className = 'btn dhh-btn';
+	link.textContent = 'Agency Login';
+	formContainer.appendChild(link);
 })();
