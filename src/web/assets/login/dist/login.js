@@ -1,19 +1,15 @@
-(($) => {
+(() => {
 	'use strict';
 
-	const scope = $('body');
-
-	const sels = {
-		ref: '#poweredby'
-	};
-
 	const init = () => {
-		const ref = scope.find(sels.ref);
-		const html = $('<a href="/actions/agency-auth/dialog" class="btn dhh-btn" />')
-			.text('Agency Login');
+		const container = document.querySelector('.login-form-container');
+		const button = document.createElement('a');
+		button.href = '/actions/agency-auth/dialog';
+		button.className = 'btn dhh-btn';
+		button.textContent = 'Agency Login';
 
-		html.insertBefore(ref);
+		container.appendChild(button);
 	};
 
 	init();
-})(jQuery);
+})();
