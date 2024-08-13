@@ -1,5 +1,13 @@
 # Change log
 
+We try to maintain a complete change log, based on what is available in git.
+
+## 2.0.0 - 2024-08-13
+
+This is a breaking change since v2 only support Craft 5.
+
+* 535f7f58f7 (bc) Move to Craft 5 (#2)
+
 ## 1.1.2 - 2024-02-08
 
 * 723c9a117b (chore) Add php 8.3 support
