@@ -188,7 +188,7 @@ class CallbackController extends Controller
 
         // Make sure password is set
         if (!$user->newPassword) {
-            throw new \Exception('default_password is not set config.');
+            throw new \Exception('default_password is not set in config.');
         }
 
         // Save the user

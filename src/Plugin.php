@@ -71,7 +71,7 @@ class Plugin extends \craft\base\Plugin
         $isLoginPage = \Craft::$app->getRequest()->getSegment(1) === 'login';
 
         // only register css and js if we are on the login page
-        if (!$isConsoleRequest && (bool) $isCPRequest && (bool) $isLoginPage) {
+        if ((bool) $isCPRequest && (bool) $isLoginPage) {
             \Craft::$app->getView()->registerAssetBundle(LoginAsset::class);
         }
     }
@@ -84,6 +84,8 @@ class Plugin extends \craft\base\Plugin
         $client_id = isset($config['client_id']) ? $config['client_id'] : null;
         $client_secret = isset($config['client_secret']) ? $config['client_secret'] : null;
 
+        $isLoginPage = \Craft::$app->getRequest()->getSegment(1) === 'login';
+        
         // only block the user if the email is from sso domain AND the client_id/secret is not set
         if (
             !empty($domain)
@@ -93,7 +95,7 @@ class Plugin extends \craft\base\Plugin
         ) {
             $request = \Craft::$app->getRequest();
             $body = $request->getBodyParams();
-            if (isset($body['password'])) {
+            if (isset($body['password']) && $isLoginPage) {
                 throw new \Exception('Agency users can\'t login with their password. Please use your Google Workspace account.');
             }
         }
