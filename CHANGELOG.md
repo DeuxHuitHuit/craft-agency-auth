@@ -2,6 +2,10 @@
 
 We try to maintain a complete change log, based on what is available in git.
 
+## 2.0.1 - 2025-06-03
+
+* 85691cebcd (chore) Compat with php 8.4 (#3)
+
 ## 2.0.0 - 2024-08-13
 
 This is a breaking change since v2 only support Craft 5.

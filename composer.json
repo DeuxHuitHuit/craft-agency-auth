@@ -2,7 +2,7 @@
   "name": "deuxhuithuit/craft-agency-auth",
   "description": "Adds SSO login in the cp with Google",
   "type": "craft-plugin",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "keywords": [
     "admin",
     "control panel",
