@@ -2,6 +2,10 @@
 
 We try to maintain a complete change log, based on what is available in git.
 
+## 2.0.2 - 2026-08-31
+
+* 5ea7761537 (chore) Support php 8.5+8.6
+
 ## 2.0.1 - 2025-06-03
 
 * 85691cebcd (chore) Compat with php 8.4 (#3)
